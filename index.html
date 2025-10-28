@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار الكيمياء</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .question {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2980b9;
+        }
+        .options {
+            margin-right: 20px;
+        }
+        .option {
+            margin-bottom: 8px;
+        }
+        input[type="radio"] {
+            margin-left: 10px;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .feedback {
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .hidden {
+            display: none;
+        }
+        #results {
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>اختبار الكيمياء</h1>
+        
+        <div id="quiz-container">
+            <!-- سيتم إضافة الأسئلة هنا ديناميكيًا -->
+        </div>
+        
+        <button id="submit-btn">إرسال الإجابات</button>
+        
+        <div id="results" class="hidden">
+            <h2>نتائج الاختبار</h2>
+            <div id="score"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم السؤال</th>
+                        <th>الإجابة المقدمة</th>
+                        <th>الإجابة الصحيحة</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body">
+                    <!-- سيتم ملء هذا الجدول ديناميكيًا -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- أصوات الإشعارات -->
+    <audio id="correct-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3"></audio>
+    <audio id="incorrect-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
+
+    <script>
+        // بيانات الأسئلة من الملف
+        const questions = [
+            {
+                number: "1",
+                text: "أي مما يلي يُعدّ من حالات المادة الأساسية؟",
+                options: [
+                    { id: "q1_a", text: "البلازما", value: "أ" },
+                    { id: "q1_b", text: "الصلبة", value: "ب" },
+                    { id: "q1_c", text: "الغروبة", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "2",
+                text: "أي خاصية تُميز المادة الصلبة؟",
+                options: [
+                    { id: "q2_a", text: "ليس لها حجم ثابت", value: "أ" },
+                    { id: "q2_b", text: "لها شكل ثابت", value: "ب" },
+                    { id: "q2_c", text: "تنضغط بسهولة", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "3",
+                text: "أي مما يلي يُعدّ من خصائص السوائل؟",
+                options: [
+                    { id: "q3_a", text: "شكل ثابت", value: "أ" },
+                    { id: "q3_b", text: "حجم ثابت", value: "ب" },
+                    { id: "q3_c", text: "يمكن ضغطها بشدة", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "4",
+                text: "الغازات تتميز بأنها؟",
+                options: [
+                    { id: "q4_a", text: "لها شكل وحجم ثابت", value: "أ" },
+                    { id: "q4_b", text: "ليس لها شكل أو حجم ثابت", value: "ب" },
+                    { id: "q4_c", text: "لا تتحرك جسماتها", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "5",
+                text: "أي مما يلي مثال على بخار؟",
+                options: [
+                    { id: "q5_a", text: "بخار الماء", value: "أ" },
+                    { id: "q5_b", text: "غاز الكسجين", value: "ب" },
+                    { id: "q5_c", text: "غاز ثاني أكسيد الكربون", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "6",
+                text: "أي خاصية يمكن ملاحظتها دون تغيير تركيب المادة؟",
+                options: [
+                    { id: "q6_a", text: "فيزيائية", value: "أ" },
+                    { id: "q6_b", text: "كيميائية", value: "ب" },
+                    { id: "q6_c", text: "نوية", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "7",
+                text: "أي من الخواص التالية تُعدّ خاصية فيزيائية؟",
+                options: [
+                    { id: "q7_a", text: "الكثافة", value: "أ" },
+                    { id: "q7_b", text: "التفاعل مع الأحماض", value: "ب" },
+                    { id: "q7_c", text: "الانشعال", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "8",
+                text: "أي من الخواص التالية تُعدّ خاصية كيميائية؟",
+                options: [
+                    { id: "q8_a", text: "القابلية للانشعال", value: "أ" },
+                    { id: "q8_b", text: "الكتلة", value: "ب" },
+                    { id: "q8_c", text: "الطول", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "9",
+                text: "الكثافة تُعدّ من الخواص؟",
+                options: [
+                    { id: "q9_a", text: "الشدة", value: "أ" },
+                    { id: "q9_b", text: "الممتدة", value: "ب" },
+                    { id: "q9_c", text: "الكيميائية", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "10",
+                text: "الطول يُعدّ من الخواص:",
+                options: [
+                    { id: "q10_a", text: "نوعية", value: "أ" },
+                    { id: "q10_b", text: "كمية", value: "ب" },
+                    { id: "q10_c", text: "كيميائية", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "11",
+                text: "عند إذابة الملح في الماء فإن ذلك:",
+                options: [
+                    { id: "q11_a", text: "تغير فيزيائي", value: "أ" },
+                    { id: "q11_b", text: "تغير كيميائي", value: "ب" },
+                    { id: "q11_c", text: "إنتاج مادة جديدة", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "12",
+                text: "احتراق الخشب يُعدّ:",
+                options: [
+                    { id: "q12_a", text: "تغير فيزيائي", value: "أ" },
+                    { id: "q12_b", text: "تغير كيميائي", value: "ب" },
+                    { id: "q12_c", text: "تغير شكلي", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "13",
+                text: "انكسار الزجاج مثال على:",
+                options: [
+                    { id: "q13_a", text: "تغير كيميائي", value: "أ" },
+                    { id: "q13_b", text: "تغير فيزيائي", value: "ب" },
+                    { id: "q13_c", text: "نموي", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "14",
+                text: "صدأ الحديد يُمثال:",
+                options: [
+                    { id: "q14_a", text: "تغير فيزيائي", value: "أ" },
+                    { id: "q14_b", text: "تغير كيميائي", value: "ب" },
+                    { id: "q14_c", text: "خاصية فيزيائية", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "15",
+                text: "تبخر الماء مثال على:",
+                options: [
+                    { id: "q15_a", text: "تغير كيميائي", value: "أ" },
+                    { id: "q15_b", text: "تغير فيزيائي", value: "ب" },
+                    { id: "q15_c", text: "لا تغير", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "16",
+                text: "قلي البيض يُعدّ:",
+                options: [
+                    { id: "q16_a", text: "تغير فيزيائي", value: "أ" },
+                    { id: "q16_b", text: "تغير كيميائي", value: "ب" },
+                    { id: "q16_c", text: "انصهار", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "17",
+                text: "تخمر العسل يُعتبر:",
+                options: [
+                    { id: "q17_a", text: "تغير فيزيائي", value: "أ" },
+                    { id: "q17_b", text: "تغير كيميائي", value: "ب" },
+                    { id: "q17_c", text: "تغير شكلي", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "18",
+                text: "أي عامل يؤثر في حالة المادة؟",
+                options: [
+                    { id: "q18_a", text: "درجة الحرارة", value: "أ" },
+                    { id: "q18_b", text: "اللون", value: "ب" },
+                    { id: "q18_c", text: "الطول", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "19",
+                text: "عند تسخين الجليد فإنه يتحول إلى:",
+                options: [
+                    { id: "q19_a", text: "غاز", value: "أ" },
+                    { id: "q19_b", text: "سائل", value: "ب" },
+                    { id: "q19_c", text: "صلب آخر", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "20",
+                text: "عملية تحول المادة من صلب إلى سائل تسعى:",
+                options: [
+                    { id: "q20_a", text: "تبخر", value: "أ" },
+                    { id: "q20_b", text: "انصهار", value: "ب" },
+                    { id: "q20_c", text: "تكف", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "21",
+                text: "تحول الغاز إلى سائل يسعى:",
+                options: [
+                    { id: "q21_a", text: "تبخر", value: "أ" },
+                    { id: "q21_b", text: "انصهار", value: "ب" },
+                    { id: "q21_c", text: "تكف", value: "ج" }
+                ],
+                correctAnswer: "ج"
+            },
+            {
+                number: "22",
+                text: "العملية التي تتحول فيها المادة الصلبة مباشرة إلى غاز:",
+                options: [
+                    { id: "q22_a", text: "ترشيح", value: "أ" },
+                    { id: "q22_b", text: "تسام", value: "ب" },
+                    { id: "q22_c", text: "تبلور", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "23",
+                text: "أي خاصية تعتمد على كمية المادة؟",
+                options: [
+                    { id: "q23_a", text: "الحجم", value: "أ" },
+                    { id: "q23_b", text: "الكثافة", value: "ب" },
+                    { id: "q23_c", text: "اللون", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "24",
+                text: "الكتلة يُعتبر خاصية:",
+                options: [
+                    { id: "q24_a", text: "ممتدة", value: "أ" },
+                    { id: "q24_b", text: "نوعية", value: "ب" },
+                    { id: "q24_c", text: "كيميائية", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "25",
+                text: "اللون يُعتبر خاصية:",
+                options: [
+                    { id: "q25_a", text: "كيميائية", value: "أ" },
+                    { id: "q25_b", text: "نوعية", value: "ب" },
+                    { id: "q25_c", text: "ممتدة", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "26",
+                text: "الخاصية التي لا تتغير بتغير كمية المادة:",
+                options: [
+                    { id: "q26_a", text: "الحجم", value: "أ" },
+                    { id: "q26_b", text: "الكثافة", value: "ب" },
+                    { id: "q26_c", text: "الكتلة", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "27",
+                text: "الشمع عند درجة حرارة الغرفة يُعتبر مادة:",
+                options: [
+                    { id: "q27_a", text: "صلبة", value: "أ" },
+                    { id: "q27_b", text: "سائلة", value: "ب" },
+                    { id: "q27_c", text: "غازية", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "28",
+                text: "الخشب يطفو على الماء لأن:",
+                options: [
+                    { id: "q28_a", text: "كثافته أقل من كثافة الماء", value: "أ" },
+                    { id: "q28_b", text: "حجمه كبير", value: "ب" },
+                    { id: "q28_c", text: "وزنه صغير", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "29",
+                text: "عند تجمد الماء فإن حجمه:",
+                options: [
+                    { id: "q29_a", text: "يزداد", value: "أ" },
+                    { id: "q29_b", text: "ينقص", value: "ب" },
+                    { id: "q29_c", text: "يبقى ثابتاً", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "30",
+                text: "النحاس موصل جيد للكهرباء، وهذا مثال على خاصية:",
+                options: [
+                    { id: "q30_a", text: "كيميائية", value: "أ" },
+                    { id: "q30_b", text: "فيزيائية", value: "ب" },
+                    { id: "q30_c", text: "نوبة", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "31",
+                text: "حشوة الأسنان غالبًا ما تصنف على أنها:",
+                options: [
+                    { id: "q31_a", text: "عنصر", value: "أ" },
+                    { id: "q31_b", text: "مركب", value: "ب" },
+                    { id: "q31_c", text: "محلول", value: "ج" }
+                ],
+                correctAnswer: "ج"
+            },
+            {
+                number: "32",
+                text: "سبيكة الحديد والنحاس تُعتبر:",
+                options: [
+                    { id: "q32_a", text: "محلول صلب-صلب", value: "أ" },
+                    { id: "q32_b", text: "محلول سائل-صلب", value: "ب" },
+                    { id: "q32_c", text: "محلول سائل-سائل", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "33",
+                text: "عند التحليل الكهربائي للماء تكون نسبة الهيدروجين إلى الأكسجين:",
+                options: [
+                    { id: "q33_a", text: "1:1", value: "أ" },
+                    { id: "q33_b", text: "2:1", value: "ب" },
+                    { id: "q33_c", text: "3:1", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "34",
+                text: "تفاعل الصوديوم مع الماء مثال على:",
+                options: [
+                    { id: "q34_a", text: "تغير فيزيائي", value: "أ" },
+                    { id: "q34_b", text: "تغير كيميائي", value: "ب" },
+                    { id: "q34_c", text: "لا تغير", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "35",
+                text: "عند غليان الماء فإنه:",
+                options: [
+                    { id: "q35_a", text: "يتغير تركيبه", value: "أ" },
+                    { id: "q35_b", text: "يتغير حالته فقط", value: "ب" },
+                    { id: "q35_c", text: "يتكون مركب جديد", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "36",
+                text: "القانون الذي يفسر ثبات الكتلة في التفاعلات:",
+                options: [
+                    { id: "q36_a", text: "قانون النسب الثابتة", value: "أ" },
+                    { id: "q36_b", text: "قانون حفظ الكتلة", value: "ب" },
+                    { id: "q36_c", text: "قانون النسب المتضاعفة", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "37",
+                text: "النسب الثابتة هو: CO و CO₂",
+                options: [
+                    { id: "q37_a", text: "النسب الثابتة", value: "أ" },
+                    { id: "q37_b", text: "حفظ الكتلة", value: "ب" },
+                    { id: "q37_c", text: "النسب المتضاعفة", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "38",
+                text: "التغير الفيزيائي يتميز ب:",
+                options: [
+                    { id: "q38_a", text: "عدم تكوين مادة جديدة", value: "أ" },
+                    { id: "q38_b", text: "تكوين مادة جديدة", value: "ب" },
+                    { id: "q38_c", text: "إنتاج حرارة دائمًا", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "39",
+                text: "أي مما يلي دليل على حدوث تغير كيميائي؟",
+                options: [
+                    { id: "q39_a", text: "انكسار الشكل", value: "أ" },
+                    { id: "q39_b", text: "تغير اللون", value: "ب" },
+                    { id: "q39_c", text: "التبخر", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "40",
+                text: "تكوين رائحة جديدة أثناء التفاعل دليل على:",
+                options: [
+                    { id: "q40_a", text: "تغير فيزيائي", value: "أ" },
+                    { id: "q40_b", text: "تغير كيميائي", value: "ب" },
+                    { id: "q40_c", text: "تغير", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "41",
+                text: "من المغنيسيوم، g من الأكسجين مع 10 g إذا تفاعلت 16.6 تكون كتلة الناتج:",
+                options: [
+                    { id: "q41_a", text: "26.6 g", value: "أ" },
+                    { id: "q41_b", text: "6.6 g", value: "ب" },
+                    { id: "q41_c", text: "106.6 g", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "42",
+                text: "هيدروجين، g من مركب تحتوي على 20 g عينة كتلتها 100 النسبة المئوية للهيدروجين =",
+                options: [
+                    { id: "q42_a", text: "11%", value: "أ" },
+                    { id: "q42_b", text: "21%", value: "ب" },
+                    { id: "q42_c", text: "31%", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "43",
+                text: "أكسجين، النسبة g هيدروجين و 19 g مركب يحتوي على 1 المئوية للهيدروجين =",
+                options: [
+                    { id: "q43_a", text: "1%", value: "أ" },
+                    { id: "q43_b", text: "5%", value: "ب" },
+                    { id: "q43_c", text: "95%", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "44",
+                text: "أيّ من الخواص التالية لا يمكن ملاحظتها مباشرة؟",
+                options: [
+                    { id: "q44_a", text: "الكثافة", value: "أ" },
+                    { id: "q44_b", text: "اللون", value: "ب" },
+                    { id: "q44_c", text: "الشكل", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "45",
+                text: "أيّ من التغيرات التالية لا يُعدّ كيميائيًا؟",
+                options: [
+                    { id: "q45_a", text: "التبخر", value: "أ" },
+                    { id: "q45_b", text: "الاحتراق", value: "ب" },
+                    { id: "q45_c", text: "الصدأ", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "46",
+                text: "عند تفاعل الحديد مع الكبريت لتكوين كبريتيد الحديد يحدث:",
+                options: [
+                    { id: "q46_a", text: "تغير فيزيائي", value: "أ" },
+                    { id: "q46_b", text: "تغير كيميائي", value: "ب" },
+                    { id: "q46_c", text: "تغير", value: "ج" }
+                ],
+                correctAnswer: "ب"
+            },
+            {
+                number: "47",
+                text: "أيّ مما يلي يُعتبر تغيرًا فيزيائيًا عكسيًا؟",
+                options: [
+                    { id: "q47_a", text: "ذوبان الثلج", value: "أ" },
+                    { id: "q47_b", text: "احتراق الفحم", value: "ب" },
+                    { id: "q47_c", text: "صدأ الحديد", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "48",
+                text: "الخاصية التي تحدد قدرة المادة على التفاعل مع الأحماض:",
+                options: [
+                    { id: "q48_a", text: "كيميائية", value: "أ" },
+                    { id: "q48_b", text: "فيزيائية", value: "ب" },
+                    { id: "q48_c", text: "ممتدة", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "49",
+                text: "أي من الحالات التالية لها جسيمات متقاربة جدًا؟",
+                options: [
+                    { id: "q49_a", text: "الصلب", value: "أ" },
+                    { id: "q49_b", text: "السائل", value: "ب" },
+                    { id: "q49_c", text: "الغاز", value: "ج" }
+                ],
+                correctAnswer: "أ"
+            },
+            {
+                number: "50",
+                text: "أي من الحالات التالية لها جسيمات متباعدة جدًا؟",
+                options: [
+                    { id: "q50_a", text: "الصلب", value: "أ" },
+                    { id: "q50_b", text: "السائل", value: "ب" },
+                    { id: "q50_c", text: "الغاز", value: "ج" }
+                ],
+                correctAnswer: "ج"
+            }
+        ];
+
+        // إنشاء واجهة الاختبار
+        const quizContainer = document.getElementById('quiz-container');
+        
+        questions.forEach(question => {
+            const questionElement = document.createElement('div');
+            questionElement.className = 'question';
+            
+            const questionNumber = document.createElement('div');
+            questionNumber.className = 'question-number';
+            questionNumber.textContent = `سؤال ${question.number}: ${question.text}`;
+            
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'options';
+            
+            question.options.forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                
+                const radioInput = document.createElement('input');
+                radioInput.type = 'radio';
+                radioInput.name = `question_${question.number}`;
+                radioInput.id = option.id;
+                radioInput.value = option.value;
+                
+                const label = document.createElement('label');
+                label.htmlFor = option.id;
+                label.textContent = `(${option.value}) ${option.text}`;
+                
+                optionElement.appendChild(radioInput);
+                optionElement.appendChild(label);
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            const feedbackElement = document.createElement('div');
+            feedbackElement.className = 'feedback hidden';
+            feedbackElement.id = `feedback_${question.number}`;
+            
+            questionElement.appendChild(questionNumber);
+            questionElement.appendChild(optionsContainer);
+            questionElement.appendChild(feedbackElement);
+            quizContainer.appendChild(questionElement);
+            
+            // إضافة مستمع الحدث للتحقق من الإجابة عند الاختيار
+            optionsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    checkAnswer(question.number, this.value, question.correctAnswer);
+                });
+            });
+        });
+
+        // دالة للتحقق من الإجابة
+        function checkAnswer(questionNumber, selectedAnswer, correctAnswer) {
+            const feedbackElement = document.getElementById(`feedback_${questionNumber}`);
+            const correctSound = document.getElementById('correct-sound');
+            const incorrectSound = document.getElementById('incorrect-sound');
+            
+            if (selectedAnswer === correctAnswer) {
+                feedbackElement.textContent = "إجابة صحيحة!";
+                feedbackElement.className = "feedback correct";
+                correctSound.play();
+            } else {
+                feedbackElement.textContent = "إجابة خاطئة! حاول مرة أخرى ولا تستسلم";
+                feedbackElement.className = "feedback incorrect";
+                incorrectSound.play();
+            }
+            
+            feedbackElement.classList.remove('hidden');
+        }
+
+        // دالة لعرض النتائج
+        document.getElementById('submit-btn').addEventListener('click', function() {
+            const resultsBody = document.getElementById('results-body');
+            resultsBody.innerHTML = '';
+            
+            let correctCount = 0;
+            let incorrectCount = 0;
+            
+            questions.forEach(question => {
+                const selectedOption = document.querySelector(`input[name="question_${question.number}"]:checked`);
+                const userAnswer = selectedOption ? selectedOption.value : 'لم يتم الإجابة';
+                const isCorrect = userAnswer === question.correctAnswer;
+                
+                if (isCorrect) correctCount++;
+                else incorrectCount++;
+                
+                const row = document.createElement('tr');
+                
+                const questionCell = document.createElement('td');
+                questionCell.textContent = question.number;
+                
+                const userAnswerCell = document.createElement('td');
+                userAnswerCell.textContent = userAnswer;
+                
+                const correctAnswerCell = document.createElement('td');
+                correctAnswerCell.textContent = question.correctAnswer;
+                
+                const statusCell = document.createElement('td');
+                statusCell.textContent = isCorrect ? 'صحيحة' : 'خاطئة';
+                statusCell.style.color = isCorrect ? 'green' : 'red';
+                
+                row.appendChild(questionCell);
+                row.appendChild(userAnswerCell);
+                row.appendChild(correctAnswerCell);
+                row.appendChild(statusCell);
+                
+                resultsBody.appendChild(row);
+            });
+            
+            document.getElementById('score').textContent = `النتيجة: ${correctCount} من ${questions.length} (${Math.round((correctCount / questions.length) * 100)}%)`;
+            document.getElementById('results').classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>
